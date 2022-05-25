@@ -1,3 +1,3 @@
 # Bitcoin_Trace
-## First Tor Start
+## Please turn on Tor before checking the proxy
 ``` streamlit run app.py ```

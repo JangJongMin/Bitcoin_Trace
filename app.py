@@ -9,10 +9,11 @@ Bitcoin_logger.set_level('DEBUG')
 #st.write("bc1qvzquqqazwh0ctt67z0y8m7esuw6786vje2emfp5m3eypn85ad68q9tez3x")
 st.title('BitCoin Transcation Trace System')
 address = st.text_input('BitCoin Address Input', 'Address input Please')
+proxy = st.checkbox("Proxy Setting")
 
-def create_node(depth):
+def create_node(depth, proxy):
     print("Create Node!")
-    transaction_class = transaction(address, maxdepth=depth)
+    transaction_class = transaction(address, proxy=proxy,maxdepth=depth)
     transaction_class.crawling()
     transaction_class.create_node()
     config = Config(width=1000, 
@@ -39,8 +40,8 @@ depth = st.slider('Depth', 1, 11, 1)
 
 if st.button('Search Address : {}'.format(address)):
     with st.spinner('Wait for it...'):
-        if checkaddress(address):
-            create_node(depth-1)
+        if checkaddress(address, proxy):
+            create_node(depth-1, proxy)
         else:
             st.write('Wrong Address')
             st.warning("Checking Address")

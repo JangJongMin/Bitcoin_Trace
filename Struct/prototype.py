@@ -16,11 +16,12 @@ class transaction():
     out : addr, value
 
     """
-    def __init__(self, address=None, time=None, filtering=0.1, depth=0, maxdepth=0):
+    def __init__(self, address=None, time=None, filtering=0.1, depth=0, maxdepth=0, proxy=False):
         self.btc = 0.00000001
         self.address = address
         self.transaction = None
         self.time = time
+        self.proxy_setting = proxy
         #print(maxdepth)
         self.maxdepth = maxdepth
         self.point_to_point_list = list()
@@ -143,7 +144,7 @@ class transaction():
         trace_transaction(self.nodes, self.edges ,address, bitcoin, filtering, time, depth, node_count, self.maxdepth)
     def crawling(self):
         time.sleep(2)
-        tracing_json_data = address_request(self.address)
+        tracing_json_data = address_request(self.address, self.proxy_setting)
         self.default_setting(tracing_json_data)
         Bitcoin_logger.get_logger().info('Address : ' + self.address)
         Bitcoin_logger.get_logger().info('Transaction Count : ' + str(self.transaction['n_tx']))
@@ -151,7 +152,7 @@ class transaction():
         count = tracing_json_data['n_tx']/5000 
         i = 1
         while count>1:
-            tracing_json_data = address_request(self.address, i)
+            tracing_json_data = address_request(self.address, self.proxy_setting, i)
             self.tranaction_extend(tracing_json_data['txs'])
             Bitcoin_logger.get_logger().info('Transaction UPDATE : ' + str(len(self.transaction['txs'])))
             count-=1
@@ -189,7 +190,7 @@ class trace_transaction(transaction):
         return address, value
     def crawling(self):
         time.sleep(2)
-        tracing_json_data = address_request(self.address, 0, 5000)
+        tracing_json_data = address_request(self.address, self.proxy_setting, 0, 5000)
         self.default_setting(tracing_json_data)
         Bitcoin_logger.get_logger().info('Address : ' + self.address)
         Bitcoin_logger.get_logger().info('Transaction Count : ' + str(self.transaction['n_tx']))
@@ -197,7 +198,7 @@ class trace_transaction(transaction):
         count = tracing_json_data['n_tx']/5000
         i = 1
         while count>1 or self.last_time():
-            tracing_json_data = address_request(self.address, i, 5000)
+            tracing_json_data = address_request(self.address, self.proxy_setting, i, 5000)
             self.tranaction_extend(tracing_json_data['txs'])
             Bitcoin_logger.get_logger().info('Transaction UPDATE : ' + str(len(self.transaction['txs'])))
             count-=1
@@ -211,7 +212,7 @@ url = 'https://blockchain.info/rawaddr/{}?limit={}&offset={}'
 
 def get_address_to_trancation(address):
     transaction_class = transaction(address)
-    tracing_json_data = address_request(address)
+    tracing_json_data = address_request(address, self.proxy_setting)
     transaction_class.default_setting(tracing_json_data)
     Bitcoin_logger.get_logger().info('Address : ' + transaction_class.address)
     Bitcoin_logger.get_logger().info('Transaction Count : ' + str(transaction_class.transaction['n_tx']))
@@ -219,7 +220,7 @@ def get_address_to_trancation(address):
     count = tracing_json_data['n_tx']/5000 
     i = 1
     while count>1:
-        tracing_json_data = address_request(address, i)
+        tracing_json_data = address_request(address, self.proxy_setting, i)
         transaction_class.tranaction_extend(tracing_json_data['txs'])
         Bitcoin_logger.get_logger().info('Transaction UPDATE : ' + str(len(transaction_class.transaction['txs'])))
         count-=1
@@ -228,13 +229,16 @@ def get_address_to_trancation(address):
     return transaction_class
     #Data split && Get Informaction
 
-def address_request(address, offset=0, limit=5000):
+def address_request(address, proxy_setting, offset=0, limit=5000):
     url = create_url(address, limit, offset)
     Bitcoin_logger.get_logger().info('[Request]Address: {}, limit: {} , offest: {}'.format(address, limit, offset))
-    return proxy_get_address_to_json(url)
+    if proxy_setting:
+        return proxy_get_address_to_json(url)
+    else:
+        return get_address_to_json(url)
 
 def proxy_get_address_to_json(url):
-    #Bitcoin_logger.get_logger().info('[Proxy]Request URL : ' + url)
+    Bitcoin_logger.get_logger().info('[Proxy]Request URL : ' + url)
     session = requests.session()
     session.proxies = {}
     session.proxies['http'] = 'socks5://localhost:9050'

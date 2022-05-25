@@ -4,11 +4,11 @@ from log.bitcoin_tracing_logger import Bitcoin_logger
 import time
 
 url = 'https://blockchain.info/rawaddr/{}?limit={}&offset={}'
-def checkaddress(address):
+def checkaddress(address, proxy):
     time.sleep(1)
     if ' ' in address:
         return False
-    tracing_json_data = address_request(address, 0, 1)
+    tracing_json_data = address_request(address, proxy, 0, 1)
     return 'error' not in tracing_json_data
 
 
@@ -31,13 +31,16 @@ def get_address_to_trancation(address):
     return transaction_class
     #Data split && Get Informaction
 
-def address_request(address, offset=0, limit=5000):
-    url = create_url(address, offset, limit)
+def address_request(address, proxy_setting, offset=0, limit=5000):
+    url = create_url(address, limit, offset)
     Bitcoin_logger.get_logger().info('[Request]Address: {}, limit: {} , offest: {}'.format(address, limit, offset))
-    return proxy_get_address_to_json(url)
+    if proxy_setting:
+        return proxy_get_address_to_json(url)
+    else:
+        return get_address_to_json(url)
 
 def proxy_get_address_to_json(url):
-    #Bitcoin_logger.get_logger().info('[Proxy]Request URL : ' + url)
+    Bitcoin_logger.get_logger().info('[Proxy]Request URL : ' + url)
     session = requests.session()
     session.proxies = {}
     session.proxies['http'] = 'socks5://localhost:9050'
@@ -69,7 +72,7 @@ def get_address_to_json(url):
         raise Exception("Rate Limit Wait Request")
 
 def create_url(address, limit, offset):
-    return url.format(address, offset, limit*5000)
+    return url.format(address, limit, offset*limit)
 
 if __name__ == '__main__':
     address = 'bc1qsfxssclfwp3rykwjdl9ghz99j7zmw9yhvdnr2f'
