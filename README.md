@@ -1,3 +1,3 @@
 # Bitcoin_Trace
 ## First Tor Start
-``` streamlit run app.pt ```
+``` streamlit run app.py ```
